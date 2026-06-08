@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertTriangle, Check, RefreshCw, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { CampaignBrief } from "@/lib/brief/types";
 import {
   DEFAULT_STRATEGY_COUNT,
@@ -29,11 +28,11 @@ interface ErrorState {
 
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-lg border border-gray-200 bg-white p-4">
-      <div className="mb-3 h-4 w-1/3 rounded bg-gray-200" />
-      <div className="mb-2 h-3 w-full rounded bg-gray-100" />
-      <div className="mb-2 h-3 w-5/6 rounded bg-gray-100" />
-      <div className="h-3 w-2/3 rounded bg-gray-100" />
+    <div className="animate-pulse rounded-lg border border-border bg-card p-5">
+      <div className="mb-3 h-5 w-1/3 rounded bg-muted" />
+      <div className="mb-2 h-3 w-full rounded bg-muted" />
+      <div className="mb-2 h-3 w-5/6 rounded bg-muted" />
+      <div className="h-3 w-2/3 rounded bg-muted" />
     </div>
   );
 }
@@ -109,16 +108,24 @@ export default function StrategyGenerator({
   }, [generate]);
 
   return (
-    <Card className="border border-gray-200 bg-gray-50">
-      <CardHeader className="flex flex-row items-start justify-between gap-4 pb-2">
+    <section aria-labelledby="strategy-heading" className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-            <Sparkles className="h-4 w-4 text-brand" />
+          <h3
+            id="strategy-heading"
+            className="flex items-center gap-2 font-serif text-xl font-semibold text-foreground"
+          >
+            <Sparkles aria-hidden="true" className="h-4 w-4 text-brand" />
             Generated Strategy Recommendations
-          </CardTitle>
-          <p className="mt-1 text-sm text-gray-600">
-            Derived from the brief above
-            {provider ? ` · ${provider} provider` : ""}
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Derived from the brief
+            {provider ? (
+              <>
+                {" · "}
+                <span className="font-mono text-xs">{provider} provider</span>
+              </>
+            ) : null}
           </p>
         </div>
         <Button
@@ -127,119 +134,133 @@ export default function StrategyGenerator({
           variant="brandOutline"
           onClick={generate}
           disabled={status === "loading"}
-          className="shrink-0 cursor-pointer gap-2"
+          className="shrink-0 cursor-pointer gap-2 self-start sm:self-auto"
         >
           <RefreshCw
+            aria-hidden="true"
             className={`h-4 w-4 ${status === "loading" ? "animate-spin" : ""}`}
           />
           {status === "loading" ? "Generating" : "Regenerate"}
         </Button>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-3 pt-2">
-        {status === "loading" && (
-          <div className="space-y-3" aria-busy="true">
-            <SkeletonCard />
-            <SkeletonCard />
-            <SkeletonCard />
+      {status === "loading" && (
+        <div className="space-y-3" aria-busy="true" role="status">
+          <span className="sr-only">Generating strategies</span>
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      )}
+
+      {status === "error" && error && (
+        <div
+          role="alert"
+          className="flex items-start gap-3 rounded-lg border border-brand/40 bg-marker/50 p-4"
+        >
+          <AlertTriangle
+            aria-hidden="true"
+            className="mt-0.5 h-5 w-5 shrink-0 text-brand"
+          />
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              {error.kind === "refused"
+                ? "The model declined this brief"
+                : "Strategy generation did not complete"}
+            </p>
+            <p className="mt-1 text-sm text-foreground/80">{error.message}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="brand"
+              onClick={generate}
+              className="mt-3 cursor-pointer"
+            >
+              Try again
+            </Button>
           </div>
-        )}
+        </div>
+      )}
 
-        {status === "error" && error && (
-          <div
-            role="alert"
-            className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4"
-          >
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-amber-900">
-                {error.kind === "refused"
-                  ? "The model declined this brief"
-                  : "Strategy generation did not complete"}
-              </p>
-              <p className="mt-1 text-sm text-amber-800">{error.message}</p>
-              <Button
-                type="button"
-                size="sm"
-                variant="brand"
-                onClick={generate}
-                className="mt-3 cursor-pointer"
-              >
-                Try again
-              </Button>
-            </div>
-          </div>
-        )}
+      {status === "ready" && strategies.length === 0 && (
+        <p className="rounded-lg border border-dashed border-input bg-card p-4 text-sm text-muted-foreground">
+          No strategies came back for this brief. Add more detail to the brief
+          and regenerate.
+        </p>
+      )}
 
-        {status === "ready" && strategies.length === 0 && (
-          <p className="rounded-lg border border-gray-200 bg-white p-4 text-sm text-gray-600">
-            No strategies came back for this brief. Add more detail to the brief
-            and regenerate.
-          </p>
-        )}
-
-        {status === "ready" &&
-          strategies.map((strategy) => {
+      {status === "ready" && strategies.length > 0 && (
+        <ol className="space-y-4">
+          {strategies.map((strategy, index) => {
             const isSelected = strategy.id === selectedStrategyId;
             return (
-              <article
-                key={strategy.id}
-                className={`rounded-lg border p-4 transition-colors ${
-                  isSelected
-                    ? "border-brand bg-white ring-1 ring-brand"
-                    : "border-gray-200 bg-white hover:border-gray-300"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <h4 className="font-semibold text-gray-900">
-                    {strategy.title}
-                  </h4>
-                  {isSelected && (
-                    <Badge className="shrink-0 gap-1 bg-brand text-brand-foreground">
-                      <Check className="h-3 w-3" />
-                      Selected
-                    </Badge>
-                  )}
-                </div>
-
-                <p className="mt-2 text-sm leading-relaxed text-gray-800">
-                  {strategy.positioning}
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                  {strategy.rationale}
-                </p>
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {strategy.channels.map((channel) => (
-                    <span
-                      key={channel}
-                      className="rounded-full bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
-                    >
-                      {channel}
-                    </span>
-                  ))}
-                </div>
-
-                <p className="mt-3 text-xs text-gray-500">
-                  <span className="font-semibold text-gray-700">
-                    First move:{" "}
-                  </span>
-                  {strategy.firstMove}
-                </p>
-
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={isSelected ? "brand" : "brandOutline"}
-                  onClick={() => onSelect(strategy)}
-                  className="mt-4 cursor-pointer"
+              <li key={strategy.id}>
+                <article
+                  aria-labelledby={`strategy-${strategy.id}`}
+                  className={`rounded-lg border bg-card p-5 transition-colors sm:p-6 ${
+                    isSelected
+                      ? "border-brand shadow-[inset_4px_0_0_var(--brand)]"
+                      : "border-border hover:border-input"
+                  }`}
                 >
-                  {isSelected ? "Keep this strategy" : "Select this strategy"}
-                </Button>
-              </article>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-mono text-xs tracking-wider text-muted-foreground uppercase">
+                        Route {String.fromCharCode(65 + index)}
+                      </p>
+                      <h4
+                        id={`strategy-${strategy.id}`}
+                        className="font-serif text-xl font-semibold text-foreground"
+                      >
+                        {strategy.title}
+                      </h4>
+                    </div>
+                    {isSelected && (
+                      <Badge className="shrink-0 gap-1 border-transparent bg-brand text-brand-foreground">
+                        <Check aria-hidden="true" className="h-3 w-3" />
+                        Selected
+                      </Badge>
+                    )}
+                  </div>
+
+                  <p className="mt-3 text-[0.95rem] leading-relaxed text-foreground">
+                    {strategy.positioning}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                    {strategy.rationale}
+                  </p>
+
+                  <ul aria-label="Channels" className="mt-4 flex flex-wrap gap-2">
+                    {strategy.channels.map((channel) => (
+                      <li
+                        key={channel}
+                        className="rounded-sm border border-border bg-muted px-2 py-0.5 font-mono text-xs text-foreground"
+                      >
+                        {channel}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-4 border-l-2 border-moss pl-3 text-sm text-foreground">
+                    <span className="font-semibold">First move: </span>
+                    {strategy.firstMove}
+                  </p>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={isSelected ? "brand" : "brandOutline"}
+                    onClick={() => onSelect(strategy)}
+                    className="mt-5 cursor-pointer"
+                  >
+                    {isSelected ? "Keep this strategy" : "Select this strategy"}
+                  </Button>
+                </article>
+              </li>
             );
           })}
-      </CardContent>
-    </Card>
+        </ol>
+      )}
+    </section>
   );
 }

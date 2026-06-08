@@ -6,7 +6,10 @@ export default function Home() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center text-sm text-gray-500">
+        <div
+          role="status"
+          className="flex min-h-screen items-center justify-center font-mono text-sm text-muted-foreground"
+        >
           Loading campaign workspace…
         </div>
       }

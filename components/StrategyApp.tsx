@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Download, Lightbulb, X } from "lucide-react";
+import { ChevronDown, Download, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ContentRenderer from "./ContentRenderer";
@@ -19,7 +19,11 @@ import type { Persona } from "@/lib/personas/types";
 import type { StrategyRecommendation } from "@/lib/strategy/types";
 import type { UploadedDocument } from "@/lib/uploads/types";
 import {
+  SECTION_ORDER,
+  TOTAL_SECTIONS,
+  completionPercent,
   getSection,
+  getStepForSection,
   isFirstSection,
   isLastSection,
   nextSection,
@@ -48,15 +52,28 @@ export default function StrategyApp() {
   const [editingPersona, setEditingPersona] = useState<Persona | null>(null);
   const [isPersonaDialogOpen, setPersonaDialogOpen] = useState(false);
   const [showSmartTip, setShowSmartTip] = useState(true);
+  const [isNavOpen, setNavOpen] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const lastSection = useRef(activeSection);
 
   const goToSection = useCallback(
     (section: SectionId) => {
       const params = new URLSearchParams(searchParams.toString());
       params.set(SECTION_PARAM, section);
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      setNavOpen(false);
     },
     [pathname, router, searchParams]
   );
+
+  // After Back/Next the old content is gone from under the reader. Moving
+  // focus to the new heading tells a screen reader where it landed and, on a
+  // phone, brings the top of the section back into view.
+  useEffect(() => {
+    if (lastSection.current === activeSection) return;
+    lastSection.current = activeSection;
+    headingRef.current?.focus();
+  }, [activeSection]);
 
   const handleNext = () => {
     setCompletedSections((prev) =>
@@ -147,17 +164,36 @@ export default function StrategyApp() {
     ),
   };
 
+  const step = getStepForSection(activeSection);
+  const sectionNumber = SECTION_ORDER.indexOf(activeSection) + 1;
+  const progress = completionPercent(completedSections);
+
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <h1 className="truncate text-2xl font-bold text-gray-800">
-              {SAMPLE_BRIEF.projectName}
-            </h1>
-            <Badge className="shrink-0 rounded-full bg-red-500 px-3 py-1 text-xs font-medium text-white hover:bg-red-500">
-              In Progress
-            </Badge>
+    <div className="min-h-screen bg-background">
+      <a
+        href="#section-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-card focus:px-3 focus:py-2"
+      >
+        Skip to section content
+      </a>
+      <header className="sticky top-0 z-20 border-b border-border bg-background/95 backdrop-blur">
+        <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <div className="min-w-0">
+            <p className="font-mono text-[0.7rem] tracking-widest text-muted-foreground uppercase">
+              {SAMPLE_BRIEF.client}
+              <span className="hidden sm:inline"> · campaign workspace</span>
+            </p>
+            <div className="flex min-w-0 items-center gap-3">
+              <h1 className="truncate font-serif text-xl font-semibold text-foreground sm:text-2xl">
+                {SAMPLE_BRIEF.projectName}
+              </h1>
+              <Badge
+                variant="outline"
+                className="hidden shrink-0 rounded-sm border-brand/50 font-mono text-[0.7rem] tracking-wider text-brand uppercase sm:inline-flex"
+              >
+                In progress
+              </Badge>
+            </div>
           </div>
           <Button
             size="sm"
@@ -165,14 +201,48 @@ export default function StrategyApp() {
             onClick={handleExport}
             className="shrink-0 cursor-pointer gap-2"
           >
-            <Download className="h-4 w-4" />
-            Export campaign
+            <Download aria-hidden="true" className="h-4 w-4" />
+            Export<span className="hidden sm:inline"> campaign</span>
           </Button>
         </div>
+
+        <button
+          type="button"
+          aria-expanded={isNavOpen}
+          aria-controls="workflow-panel"
+          onClick={() => {
+            // The panel opens at the top of the page, under the sticky header,
+            // so a reader scrolled deep into a section would not see it appear.
+            if (!isNavOpen) window.scrollTo({ top: 0 });
+            setNavOpen(!isNavOpen);
+          }}
+          className="flex w-full cursor-pointer items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-left sm:px-6 lg:hidden"
+        >
+          <span className="min-w-0">
+            <span className="block font-mono text-[0.7rem] tracking-wider text-muted-foreground uppercase">
+              Step {step.id} of 4 · {step.title} · {progress}% done
+            </span>
+            <span className="block truncate text-sm font-semibold text-foreground">
+              {section.label}
+            </span>
+          </span>
+          <span className="flex shrink-0 items-center gap-1 text-sm text-brand">
+            {isNavOpen ? "Close" : "All steps"}
+            <ChevronDown
+              aria-hidden="true"
+              className={`h-4 w-4 transition-transform ${isNavOpen ? "rotate-180" : ""}`}
+            />
+          </span>
+        </button>
       </header>
 
-      <div className="flex min-h-[calc(100vh-57px)]">
-        <aside className="w-80 shrink-0 border-r border-gray-200 bg-white p-6">
+      <div className="lg:grid lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <div
+          id="workflow-panel"
+          className={`${
+            isNavOpen ? "block" : "hidden"
+          } border-b border-border px-4 py-6 sm:px-6 lg:sticky lg:top-[73px] lg:block lg:h-[calc(100vh-73px)] lg:overflow-y-auto lg:border-r lg:border-b-0 lg:py-8`}
+        >
           <SectionNavigation
             activeSection={activeSection}
             completedSections={completedSections}
@@ -182,41 +252,49 @@ export default function StrategyApp() {
           />
 
           {showSmartTip && (
-            <div className="mt-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+            <aside
+              aria-label="Planner's note"
+              className="mt-8 rounded-md border-l-4 border-brand bg-marker/60 p-4"
+            >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-3">
-                  <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600" />
-                  <div className="min-w-0">
-                    <h4 className="text-sm font-semibold text-gray-900">
-                      Smart Tip
-                    </h4>
-                    <p className="mt-1 text-sm leading-relaxed text-gray-700">
-                      Clear objectives make strategy generation more focused and
-                      effective.
-                    </p>
-                  </div>
+                <div className="min-w-0">
+                  <p className="font-mono text-[0.7rem] tracking-wider text-foreground uppercase">
+                    Planner&apos;s note
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-foreground">
+                    Clear objectives make strategy generation more focused and
+                    effective.
+                  </p>
                 </div>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   aria-label="Dismiss tip"
                   onClick={() => setShowSmartTip(false)}
-                  className="h-6 w-6 shrink-0 cursor-pointer p-0 text-gray-600 hover:text-gray-800"
+                  className="shrink-0 cursor-pointer text-foreground/70 hover:bg-transparent hover:text-foreground"
                 >
                   <X className="h-4 w-4" />
                 </Button>
               </div>
-            </div>
+            </aside>
           )}
-        </aside>
+        </div>
 
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-4xl">
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900">
+        <main id="section-content" className="min-w-0 px-4 py-8 sm:px-8 lg:px-12 lg:py-10">
+          <div className="mx-auto max-w-3xl">
+            <div className="mb-8 border-b border-border pb-6">
+              <p className="font-mono text-xs tracking-wider text-brand uppercase">
+                Step {step.id} · {step.title} — section {sectionNumber} of{" "}
+                {TOTAL_SECTIONS}
+              </p>
+              <h2
+                ref={headingRef}
+                tabIndex={-1}
+                className="mt-2 font-serif text-3xl font-semibold text-foreground focus:outline-none sm:text-4xl"
+              >
                 {section.label}
               </h2>
-              <p className="mt-2 text-base text-gray-600">
+              <p className="mt-2 text-base text-muted-foreground">
                 {section.description}
               </p>
             </div>
@@ -226,7 +304,7 @@ export default function StrategyApp() {
               interactive={interactive}
             />
 
-            <div className="mt-8 flex items-center justify-between border-t border-gray-200 pt-4">
+            <div className="mt-10 flex items-center justify-between gap-3 border-t border-border pt-5">
               <Button
                 variant="brandOutline"
                 className="cursor-pointer"

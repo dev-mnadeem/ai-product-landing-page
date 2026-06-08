@@ -130,9 +130,9 @@ export default function PersonaDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[92vh] w-[96vw] max-w-[1200px]! overflow-y-auto p-8">
+      <DialogContent className="max-h-[92vh] w-[96vw] max-w-[1200px]! overflow-y-auto bg-card p-5 sm:p-8">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">
+          <DialogTitle className="font-serif text-2xl font-semibold">
             {isEditing ? `Edit ${persona.name || "Persona"}` : "Create New Audience"}
           </DialogTitle>
           <DialogDescription>
@@ -147,7 +147,7 @@ export default function PersonaDialog({
               <div key={field}>
                 <label
                   htmlFor={`persona-${field}`}
-                  className="mb-2 block text-sm font-medium text-gray-900"
+                  className="mb-2 block text-sm font-medium text-foreground"
                 >
                   {label}
                 </label>
@@ -178,7 +178,7 @@ export default function PersonaDialog({
                   onDelete(persona.id);
                   onClose();
                 }}
-                className="cursor-pointer border-red-300 text-red-600"
+                className="cursor-pointer border-destructive/40 text-destructive hover:bg-destructive/5"
               >
                 Remove persona
               </Button>
@@ -187,8 +187,8 @@ export default function PersonaDialog({
 
           <div className="space-y-6">
             <div className="text-center">
-              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-200">
-                <User className="h-8 w-8 text-gray-400" />
+              <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                <User className="h-8 w-8 text-muted-foreground" />
               </div>
               <Input
                 aria-label="Persona name"
@@ -202,7 +202,7 @@ export default function PersonaDialog({
                 value={form.quote}
                 onChange={(event) => setField("quote", event.target.value)}
                 placeholder="I thrive on connecting with people and staying ahead of new ideas."
-                className="resize-none border-none text-center text-gray-600 italic shadow-none"
+                className="resize-none border-none text-center text-muted-foreground italic shadow-none"
                 rows={2}
               />
             </div>
@@ -216,7 +216,7 @@ export default function PersonaDialog({
               <CardContent className="space-y-3">
                 {KEY_INFO_FIELDS.map(({ field, label, icon: Icon }) => (
                   <div key={field} className="flex items-center gap-3">
-                    <Icon className="h-4 w-4 shrink-0 text-gray-400" />
+                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
                     <Input
                       aria-label={label}
                       value={String(form[field] ?? "")}
@@ -232,7 +232,7 @@ export default function PersonaDialog({
             <div>
               <label
                 htmlFor="persona-description"
-                className="mb-2 block text-sm font-medium text-gray-900"
+                className="mb-2 block text-sm font-medium text-foreground"
               >
                 Description
               </label>
@@ -267,7 +267,7 @@ export default function PersonaDialog({
                     />
                     <label
                       htmlFor={`goal-${form.id}-${goal}`}
-                      className="cursor-pointer text-sm text-gray-700"
+                      className="cursor-pointer text-sm text-foreground"
                     >
                       {goal}
                     </label>
@@ -298,7 +298,7 @@ export default function PersonaDialog({
                     />
                     <label
                       htmlFor={`motivation-${form.id}-${motivation}`}
-                      className="cursor-pointer text-sm text-gray-700"
+                      className="cursor-pointer text-sm text-foreground"
                     >
                       {motivation}
                     </label>

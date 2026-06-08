@@ -16,15 +16,17 @@ export default function GlobalError({
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
-      <h1 className="text-2xl font-bold text-gray-900">
+      <h1 className="font-serif text-3xl font-semibold">
         The workspace hit an error
       </h1>
-      <p className="max-w-md text-sm text-gray-600">
+      <p className="max-w-md text-sm text-muted-foreground">
         Nothing entered in this session has been sent anywhere. Retrying
         re-renders the current section.
       </p>
       {error.digest && (
-        <p className="font-mono text-xs text-gray-400">digest {error.digest}</p>
+        <p className="font-mono text-xs text-muted-foreground">
+          digest {error.digest}
+        </p>
       )}
       <Button variant="brand" onClick={reset} className="cursor-pointer">
         Try again

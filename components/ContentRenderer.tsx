@@ -26,7 +26,7 @@ export default function ContentRenderer({
   interactive,
 }: ContentRendererProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {blocks.map((block, index) => {
         switch (block.kind) {
           case "prose":

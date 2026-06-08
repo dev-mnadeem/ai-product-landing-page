@@ -3,13 +3,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { FileText, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import SectionCard from "./blocks/SectionCard";
 import {
   ACCEPTED_FORMAT_LABELS,
   ACCEPT_ATTRIBUTE,
@@ -78,16 +72,9 @@ export default function FileUpload({
   const isFull = documents.length >= MAX_FILES_PER_COLLECTION;
 
   return (
-    <Card className="border border-gray-200">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold text-gray-900">
-          {title}
-        </CardTitle>
-        <CardDescription className="text-sm text-gray-600">
-          {description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4 pt-0">
+    <SectionCard title={title}>
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{description}</p>
         <label
           htmlFor={inputId}
           onDrop={handleDrop}
@@ -96,10 +83,10 @@ export default function FileUpload({
             setIsDragging(true);
           }}
           onDragLeave={() => setIsDragging(false)}
-          className={`block cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
+          className={`block cursor-pointer rounded-md border-2 border-dashed px-4 py-8 text-center transition-colors has-[:focus-visible]:border-brand has-[:focus-visible]:bg-brand/5 ${
             isDragging
               ? "border-brand bg-brand/5"
-              : "border-gray-300 hover:border-gray-400"
+              : "border-input hover:border-foreground/40"
           } ${isFull ? "pointer-events-none opacity-60" : ""}`}
         >
           <input
@@ -112,13 +99,16 @@ export default function FileUpload({
             onChange={handleInputChange}
             className="sr-only"
           />
-          <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-          <p className="mb-2 text-sm font-medium text-gray-600">
+          <Upload
+            aria-hidden="true"
+            className="mx-auto mb-3 h-8 w-8 text-muted-foreground"
+          />
+          <p className="mb-1 text-sm font-medium text-foreground">
             {isFull
               ? `Attachment limit reached (${MAX_FILES_PER_COLLECTION} files)`
               : "Click to upload your file or drag & drop here"}
           </p>
-          <p className="text-xs text-gray-500">
+          <p className="font-mono text-xs text-muted-foreground">
             {ACCEPTED_FORMAT_LABELS} · up to {formatBytes(MAX_FILE_BYTES)} each ·
             {" "}
             {documents.length}/{MAX_FILES_PER_COLLECTION} attached
@@ -126,38 +116,41 @@ export default function FileUpload({
         </label>
 
         {error && (
-          <p role="alert" className="text-xs text-red-600">
+          <p role="alert" className="text-sm text-destructive">
             {error}
           </p>
         )}
 
         {documents.length > 0 && (
           <div className="space-y-2">
-            <h4 className="text-sm font-medium text-gray-900">
+            <h4 className="text-sm font-medium text-foreground">
               Attached documents
             </h4>
-            <ul className="space-y-2">
+            <ul className="divide-y divide-border rounded-md border border-border">
               {documents.map((document) => (
                 <li
                   key={document.id}
-                  className="flex items-center justify-between gap-3 rounded bg-gray-50 px-3 py-2"
+                  className="flex items-center justify-between gap-3 px-3 py-2"
                 >
                   <span className="flex min-w-0 items-center gap-2">
-                    <FileText className="h-4 w-4 shrink-0 text-gray-400" />
-                    <span className="truncate text-sm text-gray-700">
+                    <FileText
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                    />
+                    <span className="truncate text-sm text-foreground">
                       {document.name}
                     </span>
-                    <span className="shrink-0 text-xs text-gray-400">
+                    <span className="shrink-0 font-mono text-xs text-muted-foreground">
                       {formatBytes(document.size)}
                     </span>
                   </span>
                   <Button
                     type="button"
                     variant="ghost"
-                    size="sm"
+                    size="icon-sm"
                     aria-label={`Remove ${document.name}`}
                     onClick={() => removeDocument(document.id)}
-                    className="h-6 w-6 shrink-0 cursor-pointer p-0 text-red-500 hover:text-red-700"
+                    className="shrink-0 cursor-pointer text-destructive hover:text-destructive"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -166,7 +159,7 @@ export default function FileUpload({
             </ul>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionCard>
   );
 }
