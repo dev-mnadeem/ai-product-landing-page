@@ -10,7 +10,7 @@ import FileUpload from "./FileUpload";
 import PersonaDialog from "./PersonaDialog";
 import SectionNavigation from "./SectionNavigation";
 import StrategyGenerator from "./StrategyGenerator";
-import TargetAudienceDropdown from "./TargetAudienceDropdown";
+import AudiencePicker from "./AudiencePicker";
 import { SAMPLE_BRIEF } from "@/lib/brief/sample";
 import { buildSectionContent } from "@/lib/content/sections";
 import { buildCampaignExport, exportFileName } from "@/lib/export";
@@ -122,7 +122,7 @@ export default function StrategyApp() {
       <FileUpload documents={attachments} onDocumentsChange={setAttachments} />
     ),
     "audience-picker": (
-      <TargetAudienceDropdown
+      <AudiencePicker
         personas={personas}
         selectedIds={selectedAudienceIds}
         onToggle={(id) =>
