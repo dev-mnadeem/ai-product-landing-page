@@ -7,11 +7,19 @@ export interface BriefFacts {
   readonly audience: string;
   readonly topObjective: string;
   readonly leadCompetitor: string;
-  readonly leadLearning: string;
+  /** The most recent campaign learning, or null when the brief has none. */
+  readonly leadLearning: string | null;
   readonly headlineMetric: string;
 }
 
 const UNKNOWN = "the brief";
+
+/** Trimmed text with closing punctuation, so it can be followed by another sentence. */
+function asSentence(text: string | undefined): string | null {
+  const trimmed = text?.trim();
+  if (!trimmed) return null;
+  return /[.!?"”]$/.test(trimmed) ? trimmed : `${trimmed}.`;
+}
 
 export function extractFacts(brief: CampaignBrief): BriefFacts {
   return {
@@ -20,9 +28,7 @@ export function extractFacts(brief: CampaignBrief): BriefFacts {
     audience: brief.audience.trim() || "the target audience",
     topObjective: brief.objectives[0]?.title.trim() || "the primary objective",
     leadCompetitor: brief.competitors[0]?.name.trim() || "the category leader",
-    leadLearning:
-      brief.previousCampaigns.at(-1)?.detail.trim() ||
-      "no prior campaign learnings were supplied",
+    leadLearning: asSentence(brief.previousCampaigns.at(-1)?.detail),
     headlineMetric: brief.kpis[0]
       ? `${brief.kpis[0].label} (${brief.kpis[0].value})`
       : "the headline KPI",
@@ -51,7 +57,9 @@ export const STRATEGY_ANGLES: readonly StrategyAngle[] = [
     positioning: (f) =>
       `Lead every ${f.product} touchpoint with a named customer outcome instead of a capability list, so ${f.audience} meet the result before they meet the feature.`,
     rationale: (f) =>
-      `${f.topObjective} is the objective this campaign is judged on, and the previous round already told us where the friction is: ${f.leadLearning} A proof-led campaign turns that learning into the spine of the media plan.`,
+      f.leadLearning
+        ? `${f.topObjective} is the objective this campaign is judged on, and the previous round already told us where the friction is: ${f.leadLearning} A proof-led campaign turns that learning into the spine of the media plan.`
+        : `${f.topObjective} is the objective this campaign is judged on, and with no earlier campaign to learn from, named customer results are the fastest way to build the evidence the next round will need.`,
     firstMove: (f) =>
       `Pick three ${f.client} accounts with measurable before-and-after numbers and commission one long-form case study per segment in week one.`,
   },
@@ -73,7 +81,7 @@ export const STRATEGY_ANGLES: readonly StrategyAngle[] = [
     positioning: (f) =>
       `Make the promise a clock rather than an adjective: show ${f.audience} exactly how long it takes to get one workflow live in ${f.product}, and let the trial prove it.`,
     rationale: (f) =>
-      `Complexity was the stated blocker last time, not interest. Anchoring the campaign to a measured first win moves the argument from "can it do this" to "how fast", which is the question that closes ${f.headlineMetric}.`,
+      `${f.leadLearning ? `What the last campaign taught: ${f.leadLearning} ` : ""}Anchoring the campaign to a measured first win moves the argument from "can it do this" to "how fast", which is the question that closes ${f.headlineMetric}.`,
     firstMove: () =>
       `Instrument the trial to record time-to-first-automation, then build the launch creative around the median figure it reports back.`,
   },

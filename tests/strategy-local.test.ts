@@ -86,6 +86,24 @@ describe("brief facts", () => {
     expect(facts.leadCompetitor).toBe("the category leader");
     expect(facts.topObjective).toBe("the primary objective");
     expect(facts.headlineMetric).toBe("the headline KPI");
+    expect(facts.leadLearning).toBeNull();
+  });
+
+  it("closes a learning with punctuation so the next sentence reads on", () => {
+    const facts = extractFacts({
+      ...SAMPLE_BRIEF,
+      previousCampaigns: [{ label: "Q1", detail: "  Demos beat webinars  " }],
+    });
+    expect(facts.leadLearning).toBe("Demos beat webinars.");
+  });
+
+  it("does not claim a past-campaign lesson the brief never gave", () => {
+    const facts = extractFacts({ ...SAMPLE_BRIEF, previousCampaigns: [] });
+    for (const angle of STRATEGY_ANGLES) {
+      expect(angle.rationale(facts)).not.toMatch(
+        /last time|previous round|last campaign/i
+      );
+    }
   });
 });
 
