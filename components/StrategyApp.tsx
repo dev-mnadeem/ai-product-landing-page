@@ -106,7 +106,9 @@ export default function StrategyApp() {
     anchor.href = url;
     anchor.download = exportFileName(SAMPLE_BRIEF.projectName);
     anchor.click();
-    URL.revokeObjectURL(url);
+    // Revoking in the same task can cancel the download in Firefox and Safari
+    // before they have read the blob.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   };
 
   const sectionContent = useMemo(
