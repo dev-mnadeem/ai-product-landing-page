@@ -109,14 +109,18 @@ export default function PersonaDialog({
   const [form, setForm] = useState<Persona>(() => persona ?? emptyPersona());
   const [openedFor, setOpenedFor] = useState<string | null>(null);
 
-  // Reset the draft whenever a different persona is opened. Keyed on the id,
-  // not the name, so two personas that share a name stay distinct. React's
-  // documented pattern for adjusting state on a prop change is to do it during
-  // render, which re-renders this component only, rather than in an effect.
+  // Reset the draft every time the dialog opens. Keyed on the id, not the
+  // name, so two personas that share a name stay distinct. Closing clears the
+  // key: otherwise reopening the same persona shows the abandoned edits, and a
+  // second "create" reuses the first new persona's id and overwrites it on
+  // save. React's documented pattern for adjusting state on a prop change is
+  // to do it during render rather than in an effect.
   const openKey = isOpen ? (persona?.id ?? "new") : null;
-  if (openKey !== null && openKey !== openedFor) {
+  if (openKey !== openedFor) {
     setOpenedFor(openKey);
-    setForm(persona ? { ...persona } : emptyPersona(nextPersonaId()));
+    if (openKey !== null) {
+      setForm(persona ? { ...persona } : emptyPersona(nextPersonaId()));
+    }
   }
 
   const setField = (field: keyof Persona, value: string) =>
