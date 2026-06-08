@@ -5,7 +5,7 @@ import type { StrategyProvider } from "./types";
 
 /**
  * Resolve the configured provider. `local` is the default so a fresh clone,
- * the test suite and CI all run with no credentials at all.
+ * and the test suite both run with no credentials at all.
  */
 export function getStrategyProvider(
   config: AppConfig = loadConfig()
