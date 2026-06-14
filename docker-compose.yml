@@ -1,0 +1,22 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: campaign-strategy-workspace:local
+    ports:
+      - "3000:3000"
+    environment:
+      # Defaults to the deterministic local generator, so the container needs
+      # no credentials and no outbound network access to be useful.
+      STRATEGY_PROVIDER: ${STRATEGY_PROVIDER:-local}
+      STRATEGY_API_KEY: ${STRATEGY_API_KEY:-}
+      STRATEGY_MODEL: ${STRATEGY_MODEL:-gpt-4o-mini}
+      STRATEGY_BASE_URL: ${STRATEGY_BASE_URL:-https://api.openai.com/v1}
+      STRATEGY_TIMEOUT_MS: ${STRATEGY_TIMEOUT_MS:-20000}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
