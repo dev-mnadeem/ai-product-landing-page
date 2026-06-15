@@ -72,3 +72,20 @@ This builds a standalone Next.js image and serves it on port 3000.
 - Nothing is persisted. Personas and attachments are lost on reload.
 - The Concept and Execution steps are mostly static content generated from the brief.
 - There's no auth on the API routes, so don't expose it publicly with a hosted provider configured.
+
+## Request flow
+
+```mermaid
+flowchart LR
+    Brief[Campaign brief] --> UI[Strategy selection]
+    UI --> API[POST /api/strategies]
+    API --> Config{Configured provider}
+    Config --> Local[Deterministic local generator]
+    Config --> Hosted[Optional hosted model]
+    Local --> Cards[Selectable recommendations]
+    Hosted --> Cards
+```
+
+The native browser check generated three local recommendations and selected one.
+The screenshot above comes from that running app; no hosted model was called.
+[Verification record](docs/native-verification.json).
