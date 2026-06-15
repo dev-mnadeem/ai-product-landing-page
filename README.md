@@ -89,3 +89,7 @@ flowchart LR
 The native browser check generated three local recommendations and selected one.
 The screenshot above comes from that running app; no hosted model was called.
 [Verification record](docs/native-verification.json).
+
+## Author
+
+[**Muhammad Nadeem**](https://github.com/dev-mnadeem)
